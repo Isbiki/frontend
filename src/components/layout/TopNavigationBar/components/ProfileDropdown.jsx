@@ -38,7 +38,7 @@ const ProfileDropdown = () => {
         <span className="align-middle">Lock screen</span>
       </DropdownItem>
       <DropdownDivider className="dropdown-divider my-1" />
-      <DropdownItem className="text-danger" to="/auth/sign-in">
+      <DropdownItem className="text-danger" to="/auth/sign-in" onClick={() => { onLogout() }}>
         <IconifyIcon icon="bx:log-out" className="fs-18 align-middle me-1" />
         <span className="align-middle">Logout</span>
       </DropdownItem>

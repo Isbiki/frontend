@@ -5,7 +5,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import * as yup from 'yup';
 import { useAuthContext } from '@/context/useAuthContext';
 import { useNotificationContext } from '@/context/useNotificationContext';
-import httpClient from '@/helpers/httpClient';
+import signin from '@/helpers/signin';
+import setAuthToken from '@/helpers/setAuthToken';
+
 const useSignIn = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -26,8 +28,8 @@ const useSignIn = () => {
   } = useForm({
     resolver: yupResolver(loginFormSchema),
     defaultValues: {
-      email: 'test@techzaa.com',
-      password: 'password'
+      email: '',
+      password: ''
     }
   });
   const redirectUser = () => {
@@ -36,12 +38,13 @@ const useSignIn = () => {
   };
   const login = handleSubmit(async values => {
     try {
-      const res = await httpClient.post('/signin', values);
-      console.log(res.data.token);
+      const res = await signin(values.email, values.password);
       if (res.data.success) {
         saveSession({
           ...(res.data.user ?? {}),
         });
+        setAuthToken(true);
+        localStorage.setItem('authToken', res.data.token);
         redirectUser();
         showNotification({
           message: 'Successfully logged in. Redirecting....',

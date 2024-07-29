@@ -7,24 +7,10 @@ const Finance = lazy(() => import('@/app/(admin)/dashboard/finance/page'));
 const Sales = lazy(() => import('@/app/(admin)/dashboard/sales/page'));
 
 // Apps Routes
-const EcommerceProducts = lazy(() => import('@/app/(admin)/ecommerce/products/page'));
-const EcommerceProductDetails = lazy(() => import('@/app/(admin)/ecommerce/products/[productId]/page'));
-const EcommerceProductCreate = lazy(() => import('@/app/(admin)/ecommerce/products/create/page'));
-const EcommerceCustomers = lazy(() => import('@/app/(admin)/ecommerce/customers/page'));
-const EcommerceSellers = lazy(() => import('@/app/(admin)/ecommerce/sellers/page'));
-const EcommerceOrders = lazy(() => import('@/app/(admin)/ecommerce/orders/page'));
-const EcommerceOrderDetails = lazy(() => import('@/app/(admin)/ecommerce/orders/[orderId]/page'));
-const EcommerceInventory = lazy(() => import('@/app/(admin)/ecommerce/inventory/page'));
-const Chat = lazy(() => import('@/app/(admin)/apps/chat/page'));
-const Email = lazy(() => import('@/app/(admin)/apps/email/page'));
-const Schedule = lazy(() => import('@/app/(admin)/calendar/schedule/page'));
-const Integration = lazy(() => import('@/app/(admin)/calendar/integration/page'));
-const Help = lazy(() => import('@/app/(admin)/calendar/help/page'));
-const Todo = lazy(() => import('@/app/(admin)/apps/todo/page'));
+
 const User = lazy(() => import('@/app/(admin)/apps/users/page'));
 const Role = lazy(() => import('@/app/(admin)/apps/roles/page'));
-const Social = lazy(() => import('@/app/(admin)/apps/social/page'));
-const Contacts = lazy(() => import('@/app/(admin)/apps/contacts/page'));
+// const UserUpdate = lazy(() => import('@/app/(admin)/apps/users/update'));
 const Invoices = lazy(() => import('@/app/(admin)/invoices/page'));
 const InvoiceDetails = lazy(() => import('@/app/(admin)/invoices/[invoiceId]/page'));
 
@@ -152,76 +138,11 @@ const appsRoutes = [{
   name: 'Users',
   path: '/users',
   element: <User />
-},
-{
+
+}, {
   name: 'Roles',
   path: '/roles',
   element: <Role />
-},
-{
-  name: 'Products',
-  path: '/ecommerce/products',
-  element: <EcommerceProducts />
-}, {
-  name: 'Product Details',
-  path: '/ecommerce/products/:productId',
-  element: <EcommerceProductDetails />
-}, {
-  name: 'Create Product',
-  path: '/ecommerce/products/create',
-  element: <EcommerceProductCreate />
-}, {
-  name: 'Customers',
-  path: '/ecommerce/customers',
-  element: <EcommerceCustomers />
-}, {
-  name: 'Sellers',
-  path: '/ecommerce/sellers',
-  element: <EcommerceSellers />
-}, {
-  name: 'Orders',
-  path: '/ecommerce/orders',
-  element: <EcommerceOrders />
-}, {
-  name: 'Order Details',
-  path: '/ecommerce/orders/:orderId',
-  element: <EcommerceOrderDetails />
-}, {
-  name: 'Inventory',
-  path: '/ecommerce/inventory',
-  element: <EcommerceInventory />
-}, {
-  name: 'Chat',
-  path: '/apps/chat',
-  element: <Chat />
-}, {
-  name: 'Email',
-  path: '/apps/email',
-  element: <Email />
-}, {
-  name: 'Schedule',
-  path: '/calendar/schedule',
-  element: <Schedule />
-}, {
-  name: 'Integration',
-  path: '/calendar/integration',
-  element: <Integration />
-}, {
-  name: 'Help',
-  path: '/calendar/help',
-  element: <Help />
-}, {
-  name: 'Todo',
-  path: '/apps/todo',
-  element: <Todo />
-}, {
-  name: 'Social',
-  path: '/apps/social',
-  element: <Social />
-}, {
-  name: 'Contacts',
-  path: '/apps/contacts',
-  element: <Contacts />
 }, {
   name: 'Invoices List',
   path: '/invoices',
