@@ -4,34 +4,175 @@ import { Link } from 'react-router-dom';
 import PageBreadcrumb from '@/components/layout/PageBreadcrumb';
 import PageMetaData from '@/components/PageTitle';
 import IconifyIcon from '@/components/wrappers/IconifyIcon';
-import { getAllTasks } from '@/helpers/data';
+import httpClient from '@/helpers/httpClient';
 
-const TODO = () => {
-  const [allTasks, setAllTasks] = useState();
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'react-bootstrap';
+import useToggle from '@/hooks/useToggle';
+import ChoicesFormInput from '@/components/form/ChoicesFormInput';
+import TextFormInput from '@/components/form/TextFormInput';
+import PasswordFormInput from '@/components/form/PasswordFormInput';
+
+import { yupResolver } from '@hookform/resolvers/yup';
+import { useForm } from 'react-hook-form';
+import * as yup from 'yup';
+
+const Role = () => {
+  const [roles, setRoles] = useState();
+  const [updatedRole, setUpdatedRole] = useState();
+  const [isUpdate, setIsUpdate] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [roleIdToDelete, setRoleIdToDelete] = useState(null);
+
+  // ------load roles info---------------------------
   useEffect(() => {
     (async () => {
-      const data = await getAllTasks();
-      setAllTasks(data);
+      try {
+        const res = await httpClient.get('/roles');
+        if (res.data.success) {
+          setRoles(res.data.data);
+        }
+      } catch (e) {
+        if (e.response?.data?.error) {
+          showNotification({
+            message: e.response?.data?.error,
+            variant: 'danger'
+          });
+        }
+      }
     })();
   }, []);
+  //---------- Handle Modal to Create/Update role  ------------------------------------
+  const {
+    isTrue,
+    toggle
+  } = useToggle();
+
+  const onCreate = () => {
+    setIsUpdate(false);
+    reset({
+      name: '',
+    });
+    toggle();
+  }
+  const onUpdate = (roleId) => {
+    setIsUpdate(true);
+    roles.forEach((role, index) => {
+      if (role.id === roleId) {
+        setUpdatedRole(role);
+      }
+    });
+    toggle();
+  };
+
+  useEffect(() => {
+    if (updatedRole) {
+      reset({
+        name: updatedRole.name,
+      });
+    }
+  }, [updatedRole]);
+  //------ Handle Role delete ----------------------------------------
+  const handleDeleteClick = (roleId) => {
+    setRoleIdToDelete(roleId);
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (roleIdToDelete !== null) {
+      onDelete(roleIdToDelete);
+      setShowConfirmModal(false);
+      setRoleIdToDelete(null);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowConfirmModal(false);
+    setRoleIdToDelete(null);
+  };
+  const onDelete = async (roleId) => {
+    try {
+      const res = await httpClient.delete(`/roles/${roleId}`);
+      if (res.data.success) {
+        showNotification({
+          message: 'Successfully deleted.',
+          variant: 'success'
+        });
+      }
+    } catch (e) {
+      if (e.response?.data?.error) {
+        showNotification({
+          message: e.response?.data?.error,
+          variant: 'danger'
+        });
+      }
+    }
+  }
+
+  const signUpSchema = yup.object({
+    name: yup.string().required('please enter your name'),
+  });
+  const {
+    control,
+    handleSubmit,
+    reset
+  } = useForm({
+    resolver: yupResolver(signUpSchema),
+    defaultValues: {
+      name: '',
+    }
+  });
+  const onSubmit = async (values) => {
+    if (isUpdate) {
+      try {
+        const res = await httpClient.post(`/roles/update/${updatedRole.id}`, values);
+        if (res.data.success) {
+          showNotification({
+            message: 'Successfully updated.',
+            variant: 'success'
+          });
+        }
+      } catch (e) {
+        if (e.response?.data?.error) {
+          showNotification({
+            message: e.response?.data?.error,
+            variant: 'danger'
+          });
+        }
+      }
+    }
+    else {
+      try {
+        const res = await httpClient.post('/roles/create', values);
+        if (res.data.success) {
+          showNotification({
+            message: 'Successfully created.',
+            variant: 'success'
+          });
+        }
+      } catch (e) {
+        if (e.response?.data?.error) {
+          showNotification({
+            message: e.response?.data?.error,
+            variant: 'danger'
+          });
+        }
+      }
+    }
+
+  }
+
   return <>
-    <PageBreadcrumb subName="Apps" title="Todo" />
-    <PageMetaData title="Todo" />
+    <PageBreadcrumb subName="Apps" title="Role" />
+    <PageMetaData title="Role" />
     <Row>
       <Col>
         <Card>
           <CardBody>
             <div className="d-flex flex-wrap justify-content-between gap-3">
-              <div className="search-bar">
-                <span>
-                  <IconifyIcon icon="bx:search-alt" />
-                </span>
-                <input type="search" className="form-control" id="search" placeholder="Search task..." />
-              </div>
               <div>
-                <Button variant="primary" className="d-inline-flex align-items-center">
+                <Button variant="primary" className="d-inline-flex align-items-center" onClick={() => { onCreate() }}>
                   <IconifyIcon icon="bx:plus" className="me-1" />
-                  Create Task
+                  Create Role
                 </Button>
               </div>
             </div>
@@ -41,55 +182,21 @@ const TODO = () => {
               <table className="table text-nowrap mb-0">
                 <thead className="bg-light bg-opacity-50">
                   <tr>
-                    <th className="border-0 py-2">Task Name</th>
-                    <th className="border-0 py-2">Created Date</th>
-                    <th className="border-0 py-2">Due Date</th>
-                    <th className="border-0 py-2">Assigned</th>
-                    <th className="border-0 py-2">Status</th>
-                    <th className="border-0 py-2">Priority</th>
+                    <th className="border-0 py-2">&nbsp;&nbsp;No</th>
+                    <th className="border-0 py-2">Name</th>
                     <th className="border-0 py-2">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {allTasks?.map((task, idx) => {
+                  {roles?.map((role, idx) => {
                     return <tr key={idx}>
+                      <td>&nbsp;&nbsp;{idx + 1}</td>
+                      <td>{role.name}</td>
                       <td>
-                        <div className="d-flex align-items-center gap-2">
-                          <div className="form-check form-todo ps-4">
-                            <input type="checkbox" className="form-check-input rounded-circle mt-0 fs-18" id={`customCheck${idx}`} defaultChecked={task.status === 'Completed' ? true : false} />
-                            <label className="form-check-label" htmlFor={`customCheck${idx}`}>
-                              {task.task}
-                            </label>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        {new Date(task.createdAt).toDateString()}&nbsp;
-                        <small> {new Date(task.createdAt).toLocaleTimeString()}</small>
-                      </td>
-                      <td>{new Date(task.dueDate).toDateString()}</td>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          {task.employee && <img src={task.employee?.image} alt="avatar" className="avatar-xs rounded-circle me-2" />}
-                          <div>
-                            <h5 className="fs-14 mt-1 fw-normal">{task.employee?.name}</h5>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span className={`badge badge-soft-${task.status === 'Pending' ? 'primary' : task.status === 'In-Progress' ? 'warning' : 'success'}`}>
-                          {task.status}
-                        </span>
-                      </td>
-                      <td className={`text-${task.priority === 'High' ? 'danger' : task.priority === 'Medium' ? 'warning' : 'success'}`}>
-                        <IconifyIcon icon="bxs:circle" className="me-1" />
-                        {task.priority}
-                      </td>
-                      <td>
-                        <Button variant="soft-secondary" size="sm" className="me-2">
+                        <Button variant="soft-secondary" size="sm" className="me-2" onClick={() => { onUpdate(role.id) }}>
                           <IconifyIcon icon="bx:edit" className="fs-16" />
                         </Button>
-                        <Button variant="soft-danger" size="sm" type="button">
+                        <Button variant="soft-danger" size="sm" type="button" onClick={() => { handleDeleteClick(role.id) }}>
                           <IconifyIcon icon="bx:trash" className="fs-16" />
                         </Button>
                       </td>
@@ -103,7 +210,7 @@ const TODO = () => {
                 <div className="text-muted">
                   Showing&nbsp;
                   <span className="fw-semibold">10</span>&nbsp; of&nbsp;
-                  <span className="fw-semibold">52</span>&nbsp; tasks
+                  <span className="fw-semibold">52</span>&nbsp; roles
                 </div>
               </div>
               <Col sm="auto" className="mt-3 mt-sm-0">
@@ -140,6 +247,43 @@ const TODO = () => {
         </Card>
       </Col>
     </Row>
-  </>;
+
+    <Modal show={isTrue} className="fade" scrollable id="exampleModalScrollable" tabIndex={-1}>
+      <ModalHeader>
+        <h5 className="modal-title" id="exampleModalScrollableTitle">
+          {isUpdate ? 'Update' : 'Create'}
+        </h5>
+        <button type="button" className="btn-close" onClick={toggle} />
+      </ModalHeader>
+      <ModalBody>
+        <form className="authentication-form" onSubmit={handleSubmit(onSubmit)}>
+          <TextFormInput control={control} name="name" containerClassName="mb-3" label="Name" id="name" placeholder="Enter your name" />
+          <div className="mb-1 text-center d-grid">
+            <Button variant="primary" type="submit">
+              {isUpdate ? 'Update' : 'Create'}
+            </Button>
+          </div>
+        </form>
+      </ModalBody>
+      <ModalFooter>
+
+      </ModalFooter>
+    </Modal>
+
+    <Modal show={showConfirmModal} onHide={handleCloseModal}>
+      <Modal.Header closeButton>
+        <Modal.Title>Confirm Delete</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>Are you sure you want to delete this role?</Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={handleCloseModal}>
+          Cancel
+        </Button>
+        <Button variant="danger" onClick={handleConfirmDelete}>
+          Delete
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  </>
 };
-export default TODO;
+export default Role;

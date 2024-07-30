@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, CardBody, Col, Row } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
 import PageBreadcrumb from '@/components/layout/PageBreadcrumb';
 import PageMetaData from '@/components/PageTitle';
 import IconifyIcon from '@/components/wrappers/IconifyIcon';
 import httpClient from '@/helpers/httpClient';
 
-import { Modal, ModalBody, ModalFooter, ModalHeader } from 'react-bootstrap';
+import { Modal, ModalBody, ModalFooter, ModalHeader, Pagination } from 'react-bootstrap';
 import useToggle from '@/hooks/useToggle';
 import ChoicesFormInput from '@/components/form/ChoicesFormInput';
 import TextFormInput from '@/components/form/TextFormInput';
@@ -15,9 +14,11 @@ import PasswordFormInput from '@/components/form/PasswordFormInput';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
+import { useNotificationContext } from '@/context/useNotificationContext';
 
 const User = () => {
   const [users, setUsers] = useState();
+  const [userCount, setUserCount] = useState(0);
   const [roles, setRoles] = useState();
   const [updatedUser, setUpdatedUser] = useState();
   const [isUpdate, setIsUpdate] = useState(false);
@@ -25,13 +26,59 @@ const User = () => {
   const [userIdToDelete, setUserIdToDelete] = useState(null);
   const [searchKey, setSearchKey] = useState('');
 
+  const [pageCount, setPageCount] = useState(5);
+  const [pageSize, setPageSize] = useState(5);
+  const [pageNumber, setPageNumber] = useState(1);
+
+  const [items, setItems] = useState([]);
+  const [dispNumber, setDispNumber] = useState(0);
+
+  const [selectedRole, setSelectedRole] = useState(1);
+  const [refreshFlag, setRefreshFlag] = useState(true);
+
+  const {
+    showNotification
+  } = useNotificationContext();
+  const {
+    isTrue,
+    toggle
+  } = useToggle();
+
+
   // load users and roles info
+
   useEffect(() => {
     (async () => {
       try {
         const res = await httpClient.get(`/users?search=${searchKey}`);
         if (res.data.success) {
-          setUsers(res.data.data);
+          setUsers(res.data.users);
+          let usersLength = res.data.users.length;
+          setUserCount(usersLength);
+          let temp = Math.floor(usersLength / pageSize);
+          setPageCount((usersLength / pageSize > temp) ? temp + 1 : temp);
+          if (usersLength <= pageSize) {
+            setDispNumber(usersLength);
+          }
+          else {
+            if (pageNumber < pageCount) {
+              setDispNumber(pageSize);
+            }
+            else {
+              setDispNumber(usersLength - (pageNumber - 1) * pageSize);
+            }
+          }
+        }
+        else {
+          setUsers(null);
+          setUserCount(0);
+          setPageNumber(1);
+          setPageCount(1);
+          setDispNumber(0);
+          showNotification({
+            message: res.data.message,
+            variant: 'danger'
+          });
         }
       } catch (e) {
         if (e.response?.data?.error) {
@@ -44,7 +91,7 @@ const User = () => {
       try {
         const res = await httpClient.get('/roles');
         if (res.data.success) {
-          setRoles(res.data.data);
+          setRoles(res.data.roles);
         }
       } catch (e) {
         if (e.response?.data?.error) {
@@ -55,12 +102,8 @@ const User = () => {
         }
       }
     })();
-  }, [searchKey]);
+  }, [searchKey, refreshFlag]);
   //---------- Handle Create/Update user Modal ------------------------------------
-  const {
-    isTrue,
-    toggle
-  } = useToggle();
 
   const onCreate = () => {
     setIsUpdate(false);
@@ -68,6 +111,7 @@ const User = () => {
       name: '',
       email: '',
       password: '',
+      password2: '',
       role: ''
     });
     toggle();
@@ -87,7 +131,8 @@ const User = () => {
       reset({
         name: updatedUser.name,
         email: updatedUser.email,
-        password: ''
+        password: '',
+        password2: '',
       });
     }
   }, [updatedUser]);
@@ -111,11 +156,19 @@ const User = () => {
   };
   const onDelete = async (userId) => {
     try {
+      console.log(userId);
       const res = await httpClient.delete(`/users/${userId}`);
       if (res.data.success) {
         showNotification({
-          message: 'Successfully deleted.',
+          message: res.data.message,
           variant: 'success'
+        });
+        setRefreshFlag(!refreshFlag);
+      }
+      else {
+        showNotification({
+          message: res.data.message,
+          variant: 'danger'
         });
       }
     } catch (e) {
@@ -126,16 +179,15 @@ const User = () => {
         });
       }
     }
-  }
-  const [selectedOption, setSelectedOption] = useState(1);
-
-  const handleSelectChange = (value) => {
-    setSelectedOption(value);
   };
+
   const signUpSchema = yup.object({
     name: yup.string().required('please enter your name'),
     email: yup.string().email('Please enter a valid email').required('please enter your email'),
-    password: yup.string().required('Please enter your password')
+    password: yup.string().required('Please enter your password'),
+    password2: yup.string()
+      .oneOf([yup.ref('password'), null], 'Passwords must match')
+      .required('Please confirm your password')
   });
   const {
     control,
@@ -146,52 +198,93 @@ const User = () => {
     defaultValues: {
       name: '',
       email: '',
-      password: ''
+      password: '',
+      password2: '',
     }
   });
   const onSubmit = async (values) => {
-    if (isUpdate) {
-      try {
-        console.log(values);
-        console.log(selectedOption);
-        const res = await httpClient.post(`/users/update/${updatedUser.id}`, values);
-        if (res.data.success) {
-          showNotification({
-            message: 'Successfully updated.',
-            variant: 'success'
-          });
-        }
-      } catch (e) {
-        if (e.response?.data?.error) {
-          showNotification({
-            message: e.response?.data?.error,
-            variant: 'danger'
-          });
-        }
+    try {
+      let req = { ...values, 'role': selectedRole };
+      const res = await httpClient.post('/users', req);
+      if (res.data.success) {
+        showNotification({
+          message: res.data.message,
+          variant: 'success'
+        });
+        toggle();
+        setRefreshFlag(!refreshFlag);
+      }
+      showNotification({
+        message: res.data.message,
+        variant: 'danger'
+      });
+    } catch (e) {
+      if (e.response?.data?.error) {
+        showNotification({
+          message: e.response?.data?.error,
+          variant: 'danger'
+        });
       }
     }
-    else {
-      try {
-        console.log(values);
-        console.log(selectedOption);
-        const res = await httpClient.post('/signup', values);
-        if (res.data.success) {
-          showNotification({
-            message: 'Successfully created.',
-            variant: 'success'
-          });
-        }
-      } catch (e) {
-        if (e.response?.data?.error) {
-          showNotification({
-            message: e.response?.data?.error,
-            variant: 'danger'
-          });
-        }
+  }
+  const onUpdateClicked = async () => {
+    try {
+      let req = { 'role': selectedRole };
+      const res = await httpClient.put(`/users/${updatedUser.id}`, req);
+      if (res.data.success) {
+        showNotification({
+          message: res.data.message,
+          variant: 'success'
+        });
+        toggle();
+        setRefreshFlag(!refreshFlag);
+      }
+      else {
+        showNotification({
+          message: res.data.message,
+          variant: 'danger'
+        });
+      }
+    } catch (e) {
+      if (e.response?.data?.error) {
+        showNotification({
+          message: e.response?.data?.error,
+          variant: 'danger'
+        });
       }
     }
 
   }
+
+  // --------- Role selection in Create/Update modal ---------------------
+
+
+  const handleSelectChange = (value) => {
+    setSelectedRole(value);
+  };
+  // -------- Pagination -------------
+  useEffect(() => {
+    let pages = [];
+    for (let number = 1; number <= pageCount; number++) {
+      pages.push(<Pagination.Item key={number} active={number === pageNumber} onClick={() => { setPageNumber(number) }}>
+        {number}
+      </Pagination.Item>);
+    }
+    setItems(pages);
+    if (users?.length > 0) {
+      if (users.length <= pageSize) {
+        setDispNumber(users.length);
+      }
+      else {
+        if (pageNumber < pageCount) {
+          setDispNumber(pageSize);
+        }
+        else {
+          setDispNumber(users.length - (pageNumber - 1) * pageSize);
+        }
+      }
+    }
+  }, [pageNumber, pageCount]);
 
   return <>
     <PageBreadcrumb subName="Apps" title="User" />
@@ -230,21 +323,45 @@ const User = () => {
                 </thead>
                 <tbody>
                   {users?.map((user, idx) => {
-                    return <tr key={idx}>
-                      <td>&nbsp;&nbsp;{idx + 1}</td>
-                      <td>{user.name}</td>
-                      <td>{user.email}</td>
-                      <td >{user.role_name}</td>
-                      <td>{user.created_at}</td>
-                      <td>
-                        <Button variant="soft-secondary" size="sm" className="me-2" onClick={() => { onUpdate(user.id) }}>
-                          <IconifyIcon icon="bx:edit" className="fs-16" />
-                        </Button>
-                        <Button variant="soft-danger" size="sm" type="button" onClick={() => { handleDeleteClick(user.id) }}>
-                          <IconifyIcon icon="bx:trash" className="fs-16" />
-                        </Button>
-                      </td>
-                    </tr>;
+                    if (idx >= pageSize * (pageNumber - 1) && idx < pageSize * pageNumber) {
+                      return (
+                        <tr key={user.id}>
+                          <td>&nbsp;&nbsp;{idx + 1}</td>
+                          <td>
+                            <div className="d-flex align-items-center gap-1">
+                              <img src={user.avatar} alt="avatar" className="avatar-sm rounded-circle" />
+                              <div className="d-block">
+                                <h5 className="mb-0 d-flex align-items-center gap-1">
+                                  {user.name}
+                                </h5>
+                              </div>
+                            </div>
+                          </td>
+                          <td>{user.email}</td>
+                          <td>{user.role_name}</td>
+                          <td>{user.created_at}</td>
+                          <td>
+                            <Button
+                              variant="soft-secondary"
+                              size="sm"
+                              className="me-2"
+                              onClick={() => onUpdate(user.id)}
+                            >
+                              <IconifyIcon icon="bx:edit" className="fs-16" />
+                            </Button>
+                            <Button
+                              variant="soft-danger"
+                              size="sm"
+                              type="button"
+                              onClick={() => handleDeleteClick(user.id)}
+                            >
+                              <IconifyIcon icon="bx:trash" className="fs-16" />
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    }
+                    return null; // Return null for elements not rendered  
                   })}
                 </tbody>
               </table>
@@ -253,57 +370,56 @@ const User = () => {
               <div className="col-sm">
                 <div className="text-muted">
                   Showing&nbsp;
-                  <span className="fw-semibold">10</span>&nbsp; of&nbsp;
-                  <span className="fw-semibold">52</span>&nbsp; users
+                  <span className="fw-semibold">{dispNumber}</span>&nbsp; of&nbsp;
+                  <span className="fw-semibold">{userCount}</span>&nbsp; users
                 </div>
               </div>
-              <Col sm="auto" className="mt-3 mt-sm-0">
-                <ul className="pagination pagination-rounded m-0">
-                  <li className="page-item">
-                    <Link to="" className="page-link">
-                      <IconifyIcon icon="bx:left-arrow-alt" />
-                    </Link>
-                  </li>
-                  <li className="page-item active">
-                    <Link to="" className="page-link">
-                      1
-                    </Link>
-                  </li>
-                  <li className="page-item">
-                    <Link to="" className="page-link">
-                      2
-                    </Link>
-                  </li>
-                  <li className="page-item">
-                    <Link to="" className="page-link">
-                      3
-                    </Link>
-                  </li>
-                  <li className="page-item">
-                    <Link to="" className="page-link">
-                      <IconifyIcon icon="bx:right-arrow-alt" />
-                    </Link>
-                  </li>
-                </ul>
-              </Col>
+              <nav aria-label="Page navigation example">
+                <Pagination className="justify-content-end mb-0">
+                  <Pagination.Prev onClick={() => { pageNumber > 1 ? setPageNumber(pageNumber - 1) : setPageNumber(pageNumber) }}>Previous</Pagination.Prev>
+                  {items}
+                  <Pagination.Next onClick={() => { pageNumber < pageCount ? setPageNumber(pageNumber + 1) : setPageNumber(pageNumber) }}>Next</Pagination.Next>
+                </Pagination>
+              </nav>
             </div>
           </div>
         </Card>
       </Col>
     </Row>
 
-    <Modal show={isTrue} className="fade" scrollable id="exampleModalScrollable" tabIndex={-1}>
+    <Modal show={isTrue} className="fade" id="exampleModalScrollable" tabIndex={-1}>
       <ModalHeader>
         <h5 className="modal-title" id="exampleModalScrollableTitle">
-          Create
+          {isUpdate ? 'Update' : 'Create'}
         </h5>
         <button type="button" className="btn-close" onClick={toggle} />
       </ModalHeader>
       <ModalBody>
-        <form className="authentication-form" onSubmit={handleSubmit(onSubmit)}>
-          <TextFormInput control={control} name="name" containerClassName="mb-3" label="Name" id="name" placeholder="Enter your name" />
-          <TextFormInput control={control} name="email" containerClassName="mb-3" label="Email" id="email-id" placeholder="Enter your email" />
-          <PasswordFormInput control={control} name="password" containerClassName="mb-3" placeholder="Enter your password" id="password-id" label="Password" />
+        {!isUpdate && (
+          <>
+            <form className="authentication-form" onSubmit={handleSubmit(onSubmit)}>
+              <TextFormInput control={control} name="name" containerClassName="mb-3" label="Name" id="name" placeholder="Enter your name" />
+              <TextFormInput control={control} name="email" containerClassName="mb-3" label="Email" id="email-id" placeholder="Enter your email" />
+              <PasswordFormInput control={control} name="password" containerClassName="mb-3" placeholder="Enter your password" id="password-id" label="Password" autoComplete="new-password" />
+              <PasswordFormInput control={control} name="password2" containerClassName="mb-3" placeholder="confirm your password" id="password2-id" label="password2" autoComplete="new-password" />
+              <label className="form-label">Role</label>
+              <ChoicesFormInput options={{
+                removeItemButton: true,
+                searchEnabled: false
+              }} onChange={handleSelectChange} value={isUpdate ? updatedUser.role_name : 'guest'}>
+                {roles?.map((role, idx) => (
+                  <option key={idx} value={role.name}>{role.name}</option>
+                ))}
+              </ChoicesFormInput>
+              <div className="mb-1 text-center d-grid">
+                <Button variant="primary" type="submit">
+                  Create
+                </Button>
+              </div>
+            </form>
+          </>
+        )}
+        {isUpdate && <>
           <label className="form-label">Role</label>
           <ChoicesFormInput options={{
             removeItemButton: true,
@@ -314,11 +430,11 @@ const User = () => {
             ))}
           </ChoicesFormInput>
           <div className="mb-1 text-center d-grid">
-            <Button variant="primary" type="submit">
-              {isUpdate ? 'Update' : 'Create'}
+            <Button variant="primary" onClick={onUpdateClicked}>
+              Update
             </Button>
           </div>
-        </form>
+        </>}
       </ModalBody>
       <ModalFooter>
 

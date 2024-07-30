@@ -5,18 +5,18 @@ import IconifyIcon from '@/components/wrappers/IconifyIcon';
 import avatar1 from '@/assets/images/users/avatar-1.jpg';
 const ProfileDropdown = () => {
 
-  const { removeSession } = useAuthContext();
+  const { user, removeSession } = useAuthContext();
   const onLogout = () => {
     removeSession();
   }
   return <Dropdown className="topbar-item" align={'end'}>
     <DropdownToggle as="button" type="button" className="topbar-button content-none" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
       <span className="d-flex align-items-center">
-        <img className="rounded-circle" width={32} height={32} src={avatar1} alt="avatar-3" />
+        <img className="rounded-circle" width={32} height={32} src={user.avatar} alt="avatar-3" />
       </span>
     </DropdownToggle>
     <DropdownMenu>
-      <DropdownHeader as="h6">Welcome Gaston!</DropdownHeader>
+      <DropdownHeader as="h6">Welcome {user.name}!</DropdownHeader>
       <DropdownItem as={Link} to="/pages/profile">
         <IconifyIcon icon="bx:user-circle" className="text-muted fs-18 align-middle me-1" />
         <span className="align-middle">Profile</span>
