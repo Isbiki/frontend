@@ -10,7 +10,6 @@ const Sales = lazy(() => import('@/app/(admin)/dashboard/sales/page'));
 
 const User = lazy(() => import('@/app/(admin)/apps/users/page'));
 const Role = lazy(() => import('@/app/(admin)/apps/roles/page'));
-// const UserUpdate = lazy(() => import('@/app/(admin)/apps/users/update'));
 const Invoices = lazy(() => import('@/app/(admin)/invoices/page'));
 const InvoiceDetails = lazy(() => import('@/app/(admin)/invoices/[invoiceId]/page'));
 
