@@ -51,8 +51,8 @@ const SignUpForm = () => {
   return <form className="authentication-form" onSubmit={handleSubmit(onSubmit)}>
     <TextFormInput control={control} name="name" containerClassName="mb-3" label="Name" id="name" placeholder="Enter your name" />
     <TextFormInput control={control} name="email" containerClassName="mb-3" label="Email" id="email-id" placeholder="Enter your email" />
-    <PasswordFormInput control={control} name="password" containerClassName="mb-3" placeholder="Enter your password" id="password-id" label="password" />
-    <PasswordFormInput control={control} name="password2" containerClassName="mb-3" placeholder="confirm your password" id="password2-id" label="password2" />
+    <PasswordFormInput control={control} name="password" containerClassName="mb-3" placeholder="Enter your password" id="password-id" label="password" autoComplete="new-password" />
+    <PasswordFormInput control={control} name="password2" containerClassName="mb-3" placeholder="confirm your password" id="password2-id" label="password2" autoComplete="new-password" />
     <div className="mb-3">
       <FormCheck label="I accept Terms and Condition" id="termAndCondition" />
     </div>

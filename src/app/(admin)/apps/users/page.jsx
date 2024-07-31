@@ -16,7 +16,7 @@ import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { useNotificationContext } from '@/context/useNotificationContext';
 
-const User = () => {
+const Users = () => {
   const [users, setUsers] = useState();
   const [userCount, setUserCount] = useState(0);
   const [roles, setRoles] = useState();
@@ -26,7 +26,7 @@ const User = () => {
   const [userIdToDelete, setUserIdToDelete] = useState(null);
   const [searchKey, setSearchKey] = useState('');
 
-  const [pageCount, setPageCount] = useState(5);
+  const [pageCount, setPageCount] = useState(0);
   const [pageSize, setPageSize] = useState(5);
   const [pageNumber, setPageNumber] = useState(1);
 
@@ -214,10 +214,12 @@ const User = () => {
         toggle();
         setRefreshFlag(!refreshFlag);
       }
-      showNotification({
-        message: res.data.message,
-        variant: 'danger'
-      });
+      else {
+        showNotification({
+          message: res.data.message,
+          variant: 'danger'
+        });
+      }
     } catch (e) {
       if (e.response?.data?.error) {
         showNotification({
@@ -457,4 +459,4 @@ const User = () => {
     </Modal>
   </>
 };
-export default User;
+export default Users;

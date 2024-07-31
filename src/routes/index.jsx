@@ -8,8 +8,10 @@ const Sales = lazy(() => import('@/app/(admin)/dashboard/sales/page'));
 
 // Apps Routes
 
-const User = lazy(() => import('@/app/(admin)/apps/users/page'));
-const Role = lazy(() => import('@/app/(admin)/apps/roles/page'));
+const Users = lazy(() => import('@/app/(admin)/apps/users/page'));
+const Roles = lazy(() => import('@/app/(admin)/apps/roles/page'));
+const Posts = lazy(() => import('@/app/(admin)/apps/posts/page'));
+const CreatePost = lazy(() => import('@/app/(admin)/apps/posts/create/page'));
 const Invoices = lazy(() => import('@/app/(admin)/invoices/page'));
 const InvoiceDetails = lazy(() => import('@/app/(admin)/invoices/[invoiceId]/page'));
 
@@ -73,8 +75,6 @@ const Radar = lazy(() => import('@/app/(admin)/charts/radar/page'));
 const RadialBar = lazy(() => import('@/app/(admin)/charts/radial-bar/page'));
 const Scatter = lazy(() => import('@/app/(admin)/charts/scatter/page'));
 const Polar = lazy(() => import('@/app/(admin)/charts/polar/page'));
-const GoogleMaps = lazy(() => import('@/app/(admin)/maps/google/page'));
-const VectorMaps = lazy(() => import('@/app/(admin)/maps/vector/page'));
 
 // Forms Routes
 const Basic = lazy(() => import('@/app/(admin)/forms/basic/page'));
@@ -136,12 +136,20 @@ const generalRoutes = [{
 const appsRoutes = [{
   name: 'Users',
   path: '/users',
-  element: <User />
+  element: <Users />
 
 }, {
   name: 'Roles',
   path: '/roles',
-  element: <Role />
+  element: <Roles />
+}, {
+  name: 'Posts',
+  path: '/posts',
+  element: <Posts />
+}, {
+  name: 'CreatePost',
+  path: '/posts/create',
+  element: <CreatePost />
 }, {
   name: 'Invoices List',
   path: '/invoices',
@@ -362,14 +370,6 @@ const chartsNMapsRoutes = [{
   name: 'Polar Area',
   path: '/charts/polar',
   element: <Polar />
-}, {
-  name: 'Google',
-  path: '/maps/google',
-  element: <GoogleMaps />
-}, {
-  name: 'Vector',
-  path: '/maps/vector',
-  element: <VectorMaps />
 }];
 const formsRoutes = [{
   name: 'Basic Elements',

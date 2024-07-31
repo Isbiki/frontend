@@ -38,6 +38,7 @@ const useSignIn = () => {
   };
   const login = handleSubmit(async values => {
     try {
+      console.log(values);
       const res = await signin(values.email, values.password);
       if (res.data.success) {
         saveSession({
@@ -51,7 +52,12 @@ const useSignIn = () => {
           variant: 'success'
         });
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      else {
+        showNotification({
+          message: res.data.message,
+          variant: 'danger'
+        });
+      }
     } catch (e) {
       if (e.response?.data?.error) {
         showNotification({
