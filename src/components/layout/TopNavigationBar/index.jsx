@@ -15,23 +15,13 @@ const TopNavigationBar = () => {
     <div className="container-xxl">
       <div className="navbar-header">
         <div className="d-flex align-items-center gap-2">
-          <LeftSideBarToggle />
+
 
           {/*<SearchBox />*/}
         </div>
         <div className="d-flex align-items-center gap-1">
           {/* Toggle Theme Mode */}
           <ThemeModeToggle />
-
-          {/* Apps Dropdown */}
-          <Suspense>
-            <AppsDropdown />
-          </Suspense>
-
-          {/* Notification Dropdown */}
-          <Suspense>
-            <Notifications />
-          </Suspense>
 
           {/* Toggle for Theme Customizer */}
           <ThemeCustomizerToggle />

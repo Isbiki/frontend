@@ -6,6 +6,7 @@ export const MENU_ITEMS = [{
   key: 'dashboards',
   icon: 'iconamoon:home-duotone',
   label: 'Dashboards',
+  url: '/'
 },
 {
   key: 'users',
@@ -23,17 +24,7 @@ export const MENU_ITEMS = [{
   key: 'categories',
   icon: 'iconamoon:copy-duotone',
   label: 'Categories',
-  children: [{
-    key: 'main',
-    label: 'Main',
-    url: '/categories/main',
-    parentKey: 'categories'
-  }, {
-    key: 'other',
-    label: 'Other',
-    url: '/categories/sub',
-    parentKey: 'categories'
-  }]
+  url: '/categories',
 }, {
   key: 'posts',
   icon: 'iconamoon:cheque-duotone',

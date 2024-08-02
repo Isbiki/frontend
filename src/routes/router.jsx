@@ -8,12 +8,12 @@ const AppRouter = props => {
     isAuthenticated
   } = useAuthContext();
   return <Routes>
-      {(authRoutes || []).map((route, idx) => <Route key={idx + route.name} path={route.path} element={<AuthLayout {...props}>{route.element}</AuthLayout>} />)}
+    {(authRoutes || []).map((route, idx) => <Route key={idx + route.name} path={route.path} element={<AuthLayout {...props}>{route.element}</AuthLayout>} />)}
 
-      {(appRoutes || []).map((route, idx) => <Route key={idx + route.name} path={route.path} element={isAuthenticated ? <AdminLayout {...props}>{route.element}</AdminLayout> : <Navigate to={{
+    {(appRoutes || []).map((route, idx) => <Route key={idx + route.name} path={route.path} element={isAuthenticated ? <AdminLayout {...props}>{route.element}</AdminLayout> : <Navigate to={{
       pathname: '/auth/sign-in',
       search: 'redirectTo=' + route.path
     }} />} />)}
-    </Routes>;
+  </Routes>;
 };
 export default AppRouter;

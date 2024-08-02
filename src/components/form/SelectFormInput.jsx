@@ -18,12 +18,12 @@ const SelectFormInput = ({
     field,
     fieldState
   }) => <div className={containerClassName}>
-          {label && (typeof label === 'string' ? <FormLabel htmlFor={id ?? name} className={labelClassName}>
-                {label}
-              </FormLabel> : <>{label}</>)}
-          {/* @ts-ignore */}
-          <ReactSelect {...other} {...field} options={options} onChange={e => field.onChange(e.value)} value={Array.isArray(options) && options?.find(op => 'value' in op && op.value == field.value)} classNamePrefix="react-select" id={id ?? name} />
-          {!noValidate && fieldState.error?.message && <Feedback type="invalid">{fieldState.error?.message}</Feedback>}
-        </div>} />;
+      {label && (typeof label === 'string' ? <FormLabel htmlFor={id ?? name} className={labelClassName}>
+        {label}
+      </FormLabel> : <>{label}</>)}
+      {/* @ts-ignore */}
+      <ReactSelect {...other} {...field} options={options} onChange={e => field.onChange(e.value)} value={Array.isArray(options) && options?.find(op => 'value' in op && op.value == field.value)} classNamePrefix="react-select" id={id ?? name} />
+      {!noValidate && fieldState.error?.message && <Feedback type="invalid">{fieldState.error?.message}</Feedback>}
+    </div>} />;
 };
 export default SelectFormInput;

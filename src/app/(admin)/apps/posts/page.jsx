@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card, CardBody, Col, Row } from 'react-bootstrap';
+import { Button, Card, CardBody, Col, Row, Modal, Pagination } from 'react-bootstrap';
 import PageBreadcrumb from '@/components/layout/PageBreadcrumb';
 import PageMetaData from '@/components/PageTitle';
 import IconifyIcon from '@/components/wrappers/IconifyIcon';
 import httpClient from '@/helpers/httpClient';
-import { Modal, Pagination } from 'react-bootstrap';
 import { useNotificationContext } from '@/context/useNotificationContext';
 
 const Posts = () => {
   const [posts, setPosts] = useState();
-  const [postCount, setPostCount] = useState(0);
+  const [postsCount, setPostsCount] = useState(0);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [postIdToDelete, setPostIdToDelete] = useState(null);
   const [searchKey, setSearchKey] = useState('');
@@ -37,8 +36,9 @@ const Posts = () => {
         const res = await httpClient.get(`/posts?search=${searchKey}`);
         if (res.data.success) {
           setPosts(res.data.posts);
+          // console.log(res.data.posts);
           let postsLength = res.data.posts.length;
-          setostCount(postsLength);
+          setPostsCount(postsLength);
           let temp = Math.floor(postsLength / pageSize);
           setPageCount((postsLength / pageSize > temp) ? temp + 1 : temp);
           if (postsLength <= pageSize) {
@@ -55,7 +55,7 @@ const Posts = () => {
         }
         else {
           setPosts(null);
-          setPostCount(0);
+          setPostsCount(0);
           setPageNumber(1);
           setPageCount(1);
           setDispNumber(0);
@@ -80,7 +80,7 @@ const Posts = () => {
     navigate('/posts/create');
   }
   const onUpdate = (postId) => {
-
+    navigate(`/posts/update/${postId}`);
   };
 
   //------ Handle post delete ----------------------------------------
@@ -130,9 +130,9 @@ const Posts = () => {
   // -------- Pagination -------------
   useEffect(() => {
     let pages = [];
-    for (let number = 1; number <= pageCount; number++) {
-      pages.push(<Pagination.Item key={number} active={number === pageNumber} onClick={() => { setPageNumber(number) }}>
-        {number}
+    for (let idx = 1; idx <= pageCount; idx++) {
+      pages.push(<Pagination.Item key={idx} active={idx === pageNumber} onClick={() => { setPageNumber(idx) }}>
+        {idx}
       </Pagination.Item>);
     }
     setItems(pages);
@@ -151,6 +151,18 @@ const Posts = () => {
     }
   }, [pageNumber, pageCount]);
 
+  // handle active attribute update
+  const handleActiveSetting = async (postId) => {
+    let selectedPost = posts.find(post => post.id === postId);
+    selectedPost.active = selectedPost.active ? 0 : 1;
+    const res = await httpClient.put(`/posts/${postId}`, selectedPost);
+    if (res.data.success) {
+      showNotification({ message: res.data.message, variant: 'success' });
+    }
+    else {
+      selectedPost.active = selectedPost.active ? 0 : 1;
+    }
+  }
   return <>
     <PageBreadcrumb subName="Apps" title="Post" />
     <PageMetaData title="post" />
@@ -204,10 +216,14 @@ const Posts = () => {
                             </div>
                           </td>
                           <td>{post.category}</td>
-                          <td>{post.authorName}</td>
-                          <td>{post.isActive}</td>
-                          <td>{post.isPopular}</td>
-                          <td>{post.isBreaking}</td>
+                          <td>{post.user}</td>
+                          <td>
+                            <div className="form-check form-switch">
+                              <input className="form-check-input" type="checkbox" id="googleMailSwitch" checked={post.active} onChange={() => { handleActiveSetting(post.id) }} />
+                            </div>
+                          </td>
+                          <td>{post.popular}</td>
+                          <td>{post.breaking}</td>
                           <td>
                             <Button
                               variant="soft-secondary"
@@ -239,7 +255,7 @@ const Posts = () => {
                 <div className="text-muted">
                   Showing&nbsp;
                   <span className="fw-semibold">{dispNumber}</span>&nbsp; of&nbsp;
-                  <span className="fw-semibold">{postCount}</span>&nbsp; posts
+                  <span className="fw-semibold">{postsCount}</span>&nbsp; posts
                 </div>
               </div>
               <nav aria-label="Page navigation example">

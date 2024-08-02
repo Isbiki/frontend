@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { Dropdown, DropdownDivider, DropdownHeader, DropdownItem, DropdownMenu, DropdownToggle } from 'react-bootstrap';
 import { useAuthContext } from '@/context/useAuthContext';
 import IconifyIcon from '@/components/wrappers/IconifyIcon';
-import avatar1 from '@/assets/images/users/avatar-1.jpg';
+import { SERVER_URL } from '@/helpers/serverUrl';
+
 const ProfileDropdown = () => {
 
   const { user, removeSession } = useAuthContext();
@@ -12,7 +13,7 @@ const ProfileDropdown = () => {
   return <Dropdown className="topbar-item" align={'end'}>
     <DropdownToggle as="button" type="button" className="topbar-button content-none" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
       <span className="d-flex align-items-center">
-        <img className="rounded-circle" width={32} height={32} src={user.avatar} alt="avatar-3" />
+        <img className="rounded-circle" width={32} height={32} src={SERVER_URL + user.avatar} alt="avatar-3" />
       </span>
     </DropdownToggle>
     <DropdownMenu>

@@ -7,7 +7,7 @@ import httpClient from '@/helpers/httpClient';
 
 import { Modal, ModalBody, ModalFooter, ModalHeader, Pagination } from 'react-bootstrap';
 import useToggle from '@/hooks/useToggle';
-import ChoicesFormInput from '@/components/form/ChoicesFormInput';
+import SelectFormInput from '@/components/form/SelectFormInput';
 import TextFormInput from '@/components/form/TextFormInput';
 import PasswordFormInput from '@/components/form/PasswordFormInput';
 
@@ -15,6 +15,10 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { useNotificationContext } from '@/context/useNotificationContext';
+import ImageUpload from '@/components/ImageUpload';
+import { SERVER_URL } from '@/helpers/serverUrl';
+
+const defaultAvatarPath = 'uploads/dummy-avatar.jpg';
 
 const Users = () => {
   const [users, setUsers] = useState();
@@ -29,24 +33,21 @@ const Users = () => {
   const [pageCount, setPageCount] = useState(0);
   const [pageSize, setPageSize] = useState(5);
   const [pageNumber, setPageNumber] = useState(1);
-
   const [items, setItems] = useState([]);
   const [dispNumber, setDispNumber] = useState(0);
 
-  const [selectedRole, setSelectedRole] = useState(1);
   const [refreshFlag, setRefreshFlag] = useState(true);
 
-  const {
-    showNotification
-  } = useNotificationContext();
-  const {
-    isTrue,
-    toggle
-  } = useToggle();
+  const { showNotification } = useNotificationContext();
+  const { isTrue, toggle } = useToggle();
 
+  const [avatarPath, setAvatarPath] = useState(defaultAvatarPath);
 
+  const handleAvatarPath = (path) => {
+    setAvatarPath(path);
+    setUpdatedUser({ ...updatedUser, 'avatar': path });
+  }
   // load users and roles info
-
   useEffect(() => {
     (async () => {
       try {
@@ -103,8 +104,8 @@ const Users = () => {
       }
     })();
   }, [searchKey, refreshFlag]);
-  //---------- Handle Create/Update user Modal ------------------------------------
 
+  // Handle Create/Update user Modal 
   const onCreate = () => {
     setIsUpdate(false);
     reset({
@@ -112,10 +113,11 @@ const Users = () => {
       email: '',
       password: '',
       password2: '',
-      role: ''
     });
+    setAvatarPath(defaultAvatarPath);
     toggle();
   }
+
   const onUpdate = (userId) => {
     setIsUpdate(true);
     users.forEach((user, index) => {
@@ -123,25 +125,26 @@ const Users = () => {
         setUpdatedUser(user);
       }
     });
+
     toggle();
   };
 
   useEffect(() => {
     if (updatedUser) {
-      reset({
-        name: updatedUser.name,
-        email: updatedUser.email,
-        password: '',
-        password2: '',
-      });
+      setValue('name', updatedUser?.name);
+      setValue('email', updatedUser?.email);
+      setValue('password', updatedUser?.password);
+      setValue('password2', updatedUser?.password);
+      setValue('role_id', updatedUser?.role_id);
+      setAvatarPath(updatedUser.avatar);
     }
   }, [updatedUser]);
-  //------ Handle User delete ----------------------------------------
+
+  // Handle User delete 
   const handleDeleteClick = (userId) => {
     setUserIdToDelete(userId);
     setShowConfirmModal(true);
   };
-
   const handleConfirmDelete = () => {
     if (userIdToDelete !== null) {
       onDelete(userIdToDelete);
@@ -149,14 +152,12 @@ const Users = () => {
       setUserIdToDelete(null);
     }
   };
-
   const handleCloseModal = () => {
     setShowConfirmModal(false);
     setUserIdToDelete(null);
   };
   const onDelete = async (userId) => {
     try {
-      console.log(userId);
       const res = await httpClient.delete(`/users/${userId}`);
       if (res.data.success) {
         showNotification({
@@ -188,10 +189,12 @@ const Users = () => {
     password2: yup.string()
       .oneOf([yup.ref('password'), null], 'Passwords must match')
       .required('Please confirm your password')
+
   });
   const {
     control,
     handleSubmit,
+    setValue,
     reset
   } = useForm({
     resolver: yupResolver(signUpSchema),
@@ -202,10 +205,10 @@ const Users = () => {
       password2: '',
     }
   });
-  const onSubmit = async (values) => {
+  const onCreateSubmit = async (values) => {
     try {
-      let req = { ...values, 'role': selectedRole };
-      const res = await httpClient.post('/users', req);
+      let req = { ...values, 'avatar': avatarPath };
+      const res = await httpClient.post('/signup', req);
       if (res.data.success) {
         showNotification({
           message: res.data.message,
@@ -229,9 +232,9 @@ const Users = () => {
       }
     }
   }
-  const onUpdateClicked = async () => {
+  const onUpdateSubmit = async (values) => {
     try {
-      let req = { 'role': selectedRole };
+      let req = { 'role_id': values.role_id, 'avatar': updatedUser.avatar };
       const res = await httpClient.put(`/users/${updatedUser.id}`, req);
       if (res.data.success) {
         showNotification({
@@ -255,15 +258,8 @@ const Users = () => {
         });
       }
     }
-
   }
 
-  // --------- Role selection in Create/Update modal ---------------------
-
-
-  const handleSelectChange = (value) => {
-    setSelectedRole(value);
-  };
   // -------- Pagination -------------
   useEffect(() => {
     let pages = [];
@@ -288,6 +284,17 @@ const Users = () => {
     }
   }, [pageNumber, pageCount]);
 
+  const handlePermissionSetting = async (userId) => {
+    let selectedUser = users.find(user => user.id === userId);
+    selectedUser.permission = selectedUser.permission ? 0 : 1;
+    const res = await httpClient.put(`/users/${userId}`, selectedUser);
+    if (res.data.success) {
+      showNotification({ message: res.data.message, variant: 'success' });
+    }
+    else {
+      selectedUser.permission = selectedUser.permission ? 0 : 1;
+    }
+  }
   return <>
     <PageBreadcrumb subName="Apps" title="User" />
     <PageMetaData title="User" />
@@ -319,7 +326,7 @@ const Users = () => {
                     <th className="border-0 py-2">Name</th>
                     <th className="border-0 py-2">Email</th>
                     <th className="border-0 py-2">Role</th>
-                    <th className="border-0 py-2">Created at</th>
+                    <th className="border-0 py-2">Permission</th>
                     <th className="border-0 py-2">Action</th>
                   </tr>
                 </thead>
@@ -331,7 +338,7 @@ const Users = () => {
                           <td>&nbsp;&nbsp;{idx + 1}</td>
                           <td>
                             <div className="d-flex align-items-center gap-1">
-                              <img src={user.avatar} alt="avatar" className="avatar-sm rounded-circle" />
+                              <img src={SERVER_URL + user.avatar} alt="avatar" className="avatar-sm rounded-circle" />
                               <div className="d-block">
                                 <h5 className="mb-0 d-flex align-items-center gap-1">
                                   {user.name}
@@ -341,7 +348,11 @@ const Users = () => {
                           </td>
                           <td>{user.email}</td>
                           <td>{user.role_name}</td>
-                          <td>{user.created_at}</td>
+                          <td>
+                            <div className="form-check form-switch">
+                              <input className="form-check-input" type="checkbox" id="googleMailSwitch" checked={user.permission} onChange={() => { handlePermissionSetting(user.id) }} />
+                            </div>
+                          </td>
                           <td>
                             <Button
                               variant="soft-secondary"
@@ -397,22 +408,19 @@ const Users = () => {
         <button type="button" className="btn-close" onClick={toggle} />
       </ModalHeader>
       <ModalBody>
+        <ImageUpload onSendPath={handleAvatarPath} defaultImgSrc={avatarPath} />
         {!isUpdate && (
           <>
-            <form className="authentication-form" onSubmit={handleSubmit(onSubmit)}>
+            <form className="authentication-form" onSubmit={handleSubmit(onCreateSubmit)}>
               <TextFormInput control={control} name="name" containerClassName="mb-3" label="Name" id="name" placeholder="Enter your name" />
               <TextFormInput control={control} name="email" containerClassName="mb-3" label="Email" id="email-id" placeholder="Enter your email" />
               <PasswordFormInput control={control} name="password" containerClassName="mb-3" placeholder="Enter your password" id="password-id" label="Password" autoComplete="new-password" />
               <PasswordFormInput control={control} name="password2" containerClassName="mb-3" placeholder="confirm your password" id="password2-id" label="password2" autoComplete="new-password" />
               <label className="form-label">Role</label>
-              <ChoicesFormInput options={{
-                removeItemButton: true,
-                searchEnabled: false
-              }} onChange={handleSelectChange} value={isUpdate ? updatedUser.role_name : 'guest'}>
-                {roles?.map((role, idx) => (
-                  <option key={idx} value={role.name}>{role.name}</option>
-                ))}
-              </ChoicesFormInput>
+              <SelectFormInput
+                control={control} name="role_id"
+                value={2} options={roles?.map((role) => ({ value: role.id, label: role.name }))} >
+              </SelectFormInput><br></br>
               <div className="mb-1 text-center d-grid">
                 <Button variant="primary" type="submit">
                   Create
@@ -422,20 +430,25 @@ const Users = () => {
           </>
         )}
         {isUpdate && <>
-          <label className="form-label">Role</label>
-          <ChoicesFormInput options={{
-            removeItemButton: true,
-            searchEnabled: false
-          }} onChange={handleSelectChange} value={isUpdate ? updatedUser.role_name : 'guest'}>
-            {roles?.map((role, idx) => (
-              <option key={idx} value={role.name}>{role.name}</option>
-            ))}
-          </ChoicesFormInput>
-          <div className="mb-1 text-center d-grid">
-            <Button variant="primary" onClick={onUpdateClicked}>
-              Update
-            </Button>
-          </div>
+          <form className="authentication-form" onSubmit={handleSubmit(onUpdateSubmit)}>
+            <Row style={{ display: 'none' }}>
+              <TextFormInput control={control} name="name" containerClassName="mb-3" label="Name" id="name" placeholder="Enter your name" />
+              <TextFormInput control={control} name="email" containerClassName="mb-3" label="Email" id="email-id" placeholder="Enter your email" />
+              <PasswordFormInput control={control} name="password" containerClassName="mb-3" placeholder="Enter your password" id="password-id" label="Password" autoComplete="new-password" />
+              <PasswordFormInput control={control} name="password2" containerClassName="mb-3" placeholder="confirm your password" id="password2-id" label="password2" autoComplete="new-password" />
+            </Row>
+            <label className="form-label">Role</label>
+            <SelectFormInput
+              control={control} name="role_id"
+              value={updatedUser.role_id} options={roles?.map((role) => ({ value: role.id, label: role.name }))} >
+            </SelectFormInput>
+            <br></br>
+            <div className="mb-1 text-center d-grid">
+              <Button variant="primary" type="submit">
+                Update
+              </Button>
+            </div>
+          </form>
         </>}
       </ModalBody>
       <ModalFooter>

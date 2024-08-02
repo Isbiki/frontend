@@ -20,12 +20,12 @@ const HoverMenuToggle = () => {
     }
   }, [width]);
   const handleHoverMenu = () => {
-    if (size === 'sm-hover-active') changeMenuSize('sm-hover');else changeMenuSize('sm-hover-active');
+    if (size === 'sm-hover-active') changeMenuSize('sm-hover'); else changeMenuSize('sm-hover-active');
   };
   return <button onClick={handleHoverMenu} type="button" className="button-sm-hover" aria-label="Show Full Sidebar">
-      <span className="button-sm-hover-icon">
-        <IconifyIcon icon="iconamoon:arrow-left-4-square-duotone" />
-      </span>
-    </button>;
+    <span className="button-sm-hover-icon">
+      <IconifyIcon icon="iconamoon:arrow-left-4-square-duotone" />
+    </span>
+  </button>;
 };
 export default HoverMenuToggle;

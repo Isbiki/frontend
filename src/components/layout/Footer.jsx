@@ -3,21 +3,17 @@ import IconifyIcon from '../wrappers/IconifyIcon';
 import { Col, Container, Row } from 'react-bootstrap';
 const Footer = () => {
   return <footer className="footer">
-      <Container fluid>
-        <Row>
-          <Col xs={12} className="text-center">
-            <span className="icons-center">
-              {' '}
-              {currentYear} © Reback. Crafted with&nbsp;
-              <IconifyIcon icon="iconamoon:heart-duotone" className="fs-18 align-middle text-danger" />
-              &nbsp;by&nbsp;
-              <a href={developedByLink} className="fw-bold footer-text" target="_blank">
-                {developedBy}
-              </a>
-            </span>
-          </Col>
-        </Row>
-      </Container>
-    </footer>;
+    <Container fluid>
+      <Row>
+        <Col xs={12} className="text-center">
+          <span className="icons-center">
+            {' '}
+            {currentYear} © Todaytalks&nbsp;
+
+          </span>
+        </Col>
+      </Row>
+    </Container>
+  </footer>;
 };
 export default Footer;

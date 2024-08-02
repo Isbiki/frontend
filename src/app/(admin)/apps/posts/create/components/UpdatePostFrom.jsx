@@ -1,4 +1,3 @@
-import clsx from 'clsx';
 import { useState } from 'react';
 import { Tab, Tabs } from 'react-bootstrap';
 import IconifyIcon from '@/components/wrappers/IconifyIcon';
@@ -15,7 +14,7 @@ const formSteps = [{
   icon: 'bx:images',
   tab: <PostSeoForm />
 }];
-const CreatePostForm = () => {
+const UpdatePostForm = () => {
   const [activeStep, setActiveStep] = useState(1);
   return <>
     <Tabs variant="underline" activeKey={activeStep} className="nav nav-tabs card-tabs" onSelect={e => setActiveStep(Number(e))}>
@@ -29,4 +28,4 @@ const CreatePostForm = () => {
 
   </>;
 };
-export default CreatePostForm;
+export default UpdatePostForm;

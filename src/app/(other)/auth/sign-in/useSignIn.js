@@ -38,7 +38,6 @@ const useSignIn = () => {
   };
   const login = handleSubmit(async values => {
     try {
-      console.log(values);
       const res = await signin(values.email, values.password);
       if (res.data.success) {
         saveSession({

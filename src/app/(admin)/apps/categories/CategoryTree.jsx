@@ -71,7 +71,7 @@ const MenuItemLink = ({
     {item.badge && <span className={`badge badge-pill text-end bg-${item.badge.variant}`}>{item.badge.text}</span>}
   </Link>;
 };
-const AppMenu = ({
+const CategoryTree = ({
   menuItems
 }) => {
   const {
@@ -140,4 +140,4 @@ const AppMenu = ({
     })}
   </ul>;
 };
-export default AppMenu;
+export default CategoryTree;
